@@ -1,14 +1,13 @@
-from PyQt5.QtWidgets import QLabel,QLineEdit, QDialog, QPushButton, QGridLayout
+from PyQt5.QtWidgets import QLabel, QLineEdit, QDialog, QPushButton, QGridLayout, QMessageBox, QWidget
 from PyQt5.QtCore import pyqtSignal
-import main
 import postgresql
-from datetime import datetime,date
+from datetime import datetime, date
 
 class SecondWindow(QDialog):
 
     #varSignal = pyqtSignal(str)
 
-    def __init__(self, parent=main.MainWindow):
+    def __init__(self):
         super(SecondWindow, self).__init__()
         self.initUi()
 
@@ -28,7 +27,7 @@ class SecondWindow(QDialog):
         phoneText = QLineEdit()
         departmentText = QLineEdit()
         emailText = QLineEdit()
-        birthdayText=QLineEdit()
+        birthdayText = QLineEdit()
 
         buttonAdd = QPushButton("Add User")
         buttonCancel = QPushButton("Cancel")
@@ -60,29 +59,26 @@ class SecondWindow(QDialog):
         grid.addWidget(buttonAdd, 7, 0)
         grid.addWidget(buttonCancel, 7, 1)
 
-        buttonAdd.clicked.connect(lambda: self.addUserInDB(firstNameText.text(),lastNameText.text(),
-                                                           patronymicText.text(),phoneText.text(),
-                                                           departmentText.text(),emailText.text(),
-                                                           birthdayText.text()))
-
+        buttonAdd.clicked.connect(lambda: self.addUserInDB(firstNameText.text(), lastNameText.text(),
+                                                           patronymicText.text(), phoneText.text(),
+                                                           departmentText.text(), emailText.text(), birthdayText.text()))
         buttonCancel.clicked.connect(self.cancelAdd)
         self.setLayout(grid)
 
-    def addUserInDB(self, var1,var2,var3,var4,var5,var6,var7):
-        print(var1 + " " + var2 + " " + var3+ " " + var4+ " " + var5 + " " + var6 + " " + var7)
-        db = postgresql.open("pq://postgres:postgres@localhost:5432/book")
-        print("er")
-        var8 = date.strftime(var7, '%Y-%m-%d')
-        var8.date()
-        rowquery = db.prepare("select * from user_book")
-        row=len(rowquery())
-        row=row+1
-        print(row)
-        print(type(var1))
+    def addUserInDB(self, var1, var2, var3, var4, var5, var6, var7):
 
-        print(var8.date() + " " + type(var8))
-        query = db.prepare("insert into user_book (id,first_name,second_name,patronymic,phone,department,email,date_of_birth) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)")
-        #query(row,var1,var2,var3,var4,var5,var6,var8)
+        if var7 == "":
+            QMessageBox.critical(QWidget(), 'Ошибка!', "Please input birthday in format year-month-day!")
+        else:
+            var8 = datetime.strptime(var7, '%Y-%m-%d')
+            db = postgresql.open("pq://postgres:postgres@localhost:5432/book")
+            rowquery = db.prepare("select * from user_book")
+            row = len(rowquery())
+            row = row+1
+            query = db.prepare("insert into user_book (id,first_name,second_name,patronymic,phone,department,email,date_of_birth) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)")
+            query(row, var1, var2, var3, var4, var5, var6, var8.date())
+            QMessageBox.accept(QWidget(), 'Congratulations', "USer are add in book")
+            self.close()
 
     def cancelAdd(self):
         self.close()

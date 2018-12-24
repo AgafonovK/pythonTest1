@@ -2,16 +2,17 @@ import sys
 
 import postgresql
 from PyQt5.QtWidgets import (QTableWidgetItem,
-                             QApplication, QTableWidget, QAction, QMainWindow)
+                             QApplication, QTableWidget, QAction, QMainWindow, QLabel)
 
-import gui
+from gui import SecondWindow
+from SetDBAdress import setDBAdress
 
 
 class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.SecondWindow = gui.SecondWindow(self)
+        self.SecondWindow = SecondWindow()
         self.initUI()
 
     def initUI(self):
@@ -22,23 +23,36 @@ class MainWindow(QMainWindow):
         addPersonAction.setStatusTip('Add Person')
         addPersonAction.triggered.connect(self.buttonAddClicked)
 
+        refreshTableAction = QAction('ref tab', self)
+        refreshTableAction.setStatusTip('refresh table')
+        refreshTableAction.triggered.connect(self.refreshtable)
+
         exitAction = QAction('Exit', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(self.close)
+        #label = QLabel()
+        #setDBAction = QAction('Set Data Base Url', self)
+        #self.var2 =""
+        #dialog = setDBAdress()
+        #dialog.selected.connect(label.setText)
 
+        #setDBAction.triggered.connect(self.setDB)
+
+        #print("!!!! " + label.text())
         self.statusBar()
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(addPersonAction)
         fileMenu.addAction(exitAction)
-        fileMenu = menubar.addMenu('&Setting')
+        #fileMenuSetting = menubar.addMenu('&Setting')
+        #fileMenuSetting.addAction(setDBAction)
 
         toolbar = self.addToolBar('Exit')
         toolbar.addAction(addPersonAction)
         toolbar.addAction(exitAction)
-
+        toolbar.addAction(refreshTableAction)
         #listUser = self.getAllUser()
         #print(listUser)
         #rowCount = len(listUser)
@@ -57,12 +71,28 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('Review')
         self.show()
 
+    def foo(self):
+        model = self.personTable.selectedItems()
+        print(model)
+
+    def refreshtable(self):
+        self.personTable.clearContents()
+        self.refreshAllTableUser(self.personTable)
+
+    def setDB(self):
+        self.setDBadress = self.SetDBAdress()
+        #setDBadress.selected.connect(self.var2)
+        self.setDBadress.show()
+
+
     def buttonAddClicked(self):
-        self.secondWindow = gui.SecondWindow()
+        self.secondWindow = SecondWindow()
         self.secondWindow.show()
 
     def getAllUser(self):
+        #print("strdb get " + strdb)
         with postgresql.open("pq://postgres:postgres@localhost:5432/book") as db:
+            #"pq://postgres:postgres@localhost:5432/book") as db:
             query = db.prepare("select * from user_book")
             #rowCount = len(query())
             listUser = query()
